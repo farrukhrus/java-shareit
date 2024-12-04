@@ -8,7 +8,7 @@ import ru.practicum.shareit.request.ItemRequest;
 
 
 @Data
-@Builder(toBuilder = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Item {

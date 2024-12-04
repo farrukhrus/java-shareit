@@ -32,6 +32,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public Item getItem(Long itemId) {
         if (!itemStorage.containsKey(itemId)) {
+            log.error("Item with id {} is not found", itemId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + itemId + " is not found");
         }
         return itemStorage.get(itemId);
@@ -65,10 +66,12 @@ public class ItemRepositoryImpl implements ItemRepository {
     }
 
     private void updateFields(Item existingItem, Item newItem) {
-        if (newItem.getName() != null && !existingItem.getName().equals(newItem.getName())) {
+        if (newItem.getName() != null && !existingItem.getName().equals(newItem.getName())
+                && !newItem.getName().isBlank()) {
             existingItem.setName(newItem.getName());
         }
-        if (newItem.getDescription() != null && !existingItem.getDescription().equals(newItem.getDescription())) {
+        if (newItem.getDescription() != null && !existingItem.getDescription().equals(newItem.getDescription())
+                && !newItem.getDescription().isBlank()) {
             existingItem.setDescription(newItem.getDescription());
         }
         if (newItem.isAvailable() != existingItem.isAvailable()) {
@@ -78,11 +81,13 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     private Item validateItemOwnership(Long ownerId, Long itemId) {
         if (!itemStorage.containsKey(itemId)) {
+            log.error("Item with id {} is already exist", itemId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + itemId + " is already exist");
         }
 
         Item item = itemStorage.get(itemId);
         if (!item.getOwnerId().equals(ownerId)) {
+            log.error("You are not the owner of item with id {}", itemId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "You are not the owner of item with id " + itemId);
         }
         return item;

@@ -29,9 +29,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User createUser(User user) {
-        if (validateEmailExist(user)) {
-            throw new ValidationException("Email is already exist");
-        }
+        validateEmailExist(user);
         user.setId(generatedId());
         userStorage.put(user.getId(), user);
         return user;
@@ -40,9 +38,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User updateUser(User user) {
         validateUserExists(user.getId());
-        if (validateEmailExist(user)) {
-            throw new ValidationException("Email is already exist");
-        }
+        validateEmailExist(user);
         User userToUpdate = userStorage.get(user.getId());
         updateUser(userToUpdate, user);
         return userToUpdate;
@@ -57,15 +53,19 @@ public class UserRepositoryImpl implements UserRepository {
 
     private void validateUserExists(Long userId) {
         if (!userStorage.containsKey(userId)) {
+            log.error("User with id {} is not exist.", userId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with id " + userId + " is not exist.");
         }
     }
 
-    private boolean validateEmailExist(User user) {
-        return userStorage.values().stream()
+    private void validateEmailExist(User user) {
+        if (userStorage.values().stream()
                 .anyMatch(existingUser ->
                         existingUser.getEmail() != null
-                                && existingUser.getEmail().equalsIgnoreCase(user.getEmail()));
+                                && existingUser.getEmail().equalsIgnoreCase(user.getEmail()))) {
+            log.error("Email {} is already exist", user.getEmail());
+            throw new ValidationException("Email is already exist");
+        }
     }
 
     private Long generatedId() {
@@ -73,11 +73,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     private void updateUser(User userToUpdate, User newUser) {
-        if (newUser.getEmail() != null) {
+        if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
             userToUpdate.setEmail(newUser.getEmail());
         }
 
-        if (newUser.getName() != null) {
+        if (newUser.getName() != null && !newUser.getName().isBlank()) {
             userToUpdate.setName(newUser.getName());
         }
     }
