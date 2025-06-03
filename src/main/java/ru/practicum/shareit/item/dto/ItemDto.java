@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 
 @Data
 @Builder(toBuilder = true)
@@ -19,4 +22,8 @@ public class ItemDto {
     private String description;
     @NotBlank
     private String available;
+
+    private LocalDateTime lastBooking;
+    private LocalDateTime nextBooking;
+    private List<CommentDto> comments;
 }

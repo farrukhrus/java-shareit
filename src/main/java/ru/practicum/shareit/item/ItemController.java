@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentCreateDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import java.util.List;
@@ -21,7 +23,7 @@ public class ItemController {
     @GetMapping
     public ResponseEntity<List<ItemDto>> getItemsByOwnerId(@RequestHeader(HEADER_USER_ID) Long userId) {
         log.debug("Getting item by owner id {}", userId);
-        List<ItemDto> items = itemService.getItemsByOwnerId(userId);
+        List<ItemDto> items = itemService.getBookings(userId);
         return ResponseEntity.ok(items);
     }
 
@@ -66,5 +68,13 @@ public class ItemController {
         log.debug("Deleting item with id {}", itemId);
         itemService.deleteItem(userId, itemId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<CommentDto> addComment(@RequestHeader(HEADER_USER_ID) Long userId,
+                                                 @PathVariable Long itemId,
+                                                 @Valid @RequestBody CommentCreateDto commentDto) {
+        CommentDto addedComment = itemService.addComment(itemId, userId, commentDto);
+        return ResponseEntity.ok(addedComment);
     }
 }
