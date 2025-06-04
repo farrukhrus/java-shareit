@@ -32,10 +32,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getItemsByOwnerId(Long userId) {
         List<Item> items = repository.findAllByOwnerId(userId);
-        return items.stream().map(item -> {
-            Long itemId = item.getId();
-            return itemMapper.toItemDto(item);
-        }).collect(Collectors.toList());
+        return items.stream().map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
     @Override
@@ -53,7 +50,7 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, Booking> nextBookings = bookingRepository.findNextBookingsByOwner(ownerId, now)
                 .stream().collect(Collectors.toMap(b -> b.getItem().getId(), b -> b));
 
-        List<Comment> comments = commentRepository.findByItem_Owner_Id(ownerId);
+        List<Comment> comments = commentRepository.findByItemOwnerId(ownerId);
 
         Map<Long, List<CommentDto>> commentsByItemId = comments.stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId(),
@@ -94,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
         if (text == null || text.isBlank()) {
             return List.of();
         }
-        return repository.search(text).stream()
+        return repository.searchAvailableItemsByText(text).stream()
                 .map(itemMapper::toItemDto)
                 .toList();
     }
@@ -118,7 +115,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null && Boolean.parseBoolean(itemDto.getAvailable()) != oldItem.isAvailable()) {
             oldItem.setAvailable(Boolean.parseBoolean(itemDto.getAvailable()));
         }
-        return itemMapper.toItemDto(repository.save(oldItem));
+        return itemMapper.toItemDto(oldItem);
     }
 
     @Override

@@ -43,7 +43,6 @@ public class UserServiceImpl implements UserService {
         if (user.getName() == null || oldUser.getName().isBlank()) {
             user.setName(oldUser.getName());
         }
-
         return userMapper.toUserDto(repository.save(user));
     }
 

@@ -9,13 +9,14 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
-@Data
+@Getter
+@Setter
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 400)
+    @Column(length = 400, nullable = false)
     private String text;
 
     @ManyToOne
@@ -28,5 +29,6 @@ public class Comment {
     private User author;
 
     @CreationTimestamp
+    @Column(nullable = false)
     private LocalDateTime created;
 }

@@ -74,9 +74,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        Booking updatedBooking = bookingRepository.save(booking);
-
-        return bookingMapper.toBookingDto(updatedBooking);
+        return bookingMapper.toBookingDto(booking);
     }
 
     @Override
@@ -112,7 +110,7 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
-
+    @Transactional(readOnly = true)
     private List<Booking> findBookings(Long userId, BookingState state) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -134,6 +132,7 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
+    @Transactional(readOnly = true)
     private List<Booking> findBookingsForOwner(List<Long> itemIds, BookingState state) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -155,17 +154,19 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-
+    @Transactional(readOnly = true)
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
+    @Transactional(readOnly = true)
     private Booking findBookingById(Long bookingId) {
         return bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found"));
     }
 
+    @Transactional(readOnly = true)
     private void validateBookingAccess(Long userId, Booking booking) {
         if (!booking.getBooker().getId().equals(userId) &&
                 !booking.getItem().getOwner().getId().equals(userId)) {

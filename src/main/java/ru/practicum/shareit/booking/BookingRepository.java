@@ -47,8 +47,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("select b from Booking b where b.item.id = :itemId " +
             "and b.booker.id = :bookerId and b.status= :status and b.end<:end ")
-    List<Booking> findByItemIdAndBookerIdAndStatusAndEndIsBefore(Long itemId, Long bookerId, BookingStatus status, LocalDateTime end);
+    List<Booking> findByItemIdAndBookerIdAndStatusAndEndIsBefore(Long itemId, Long bookerId, BookingStatus status,
+                                                                 LocalDateTime end);
 
-    boolean existsByItemIdAndStatusAndEndAfterAndStartBefore(Long itemId, BookingStatus status, LocalDateTime start, LocalDateTime end);
-
+    boolean existsByItemIdAndStatusAndEndAfterAndStartBefore(Long itemId, BookingStatus status, LocalDateTime start,
+                                                             LocalDateTime end);
 }
