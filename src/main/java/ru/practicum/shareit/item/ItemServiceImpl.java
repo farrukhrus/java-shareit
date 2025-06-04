@@ -80,6 +80,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto itemDto, Long userId) {
+        if (itemDto.getAvailable().isBlank() || itemDto.getAvailable() == null) {
+            throw new ValidationException("Available must not be blank or null");
+        }
+
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Item newItem = itemMapper.toItem(itemDto, null, null, owner);

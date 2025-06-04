@@ -39,7 +39,7 @@ public class BookingController {
     public ResponseEntity<BookingDto> getBookingById(@RequestHeader(HEADER_USER_ID) Long userId,
                                      @PathVariable Long bookingId) {
         log.debug("Get booking by booking id {}", bookingId);
-        BookingDto bd =bookingService.getBookingById(userId, bookingId);
+        BookingDto bd = bookingService.getBookingById(userId, bookingId);
         return ResponseEntity.ok(bd);
     }
 
