@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -31,24 +32,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User oldUser = repository.findById(id)
+        User user = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User wit id %s is not found", id)));
-        User user = userMapper.toUser(userDto);
-        user.setId(id);
 
-        if (user.getEmail() == null || oldUser.getEmail().isBlank()) {
-            user.setEmail(oldUser.getEmail());
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            if (repository.existsByEmailIgnoreCase(userDto.getEmail())) {
+                throw new ValidationException("Email already exists: " + userDto.getEmail());
+            }
+            user.setEmail(userDto.getEmail());
         }
 
-        if (user.getName() == null || oldUser.getName().isBlank()) {
-            user.setName(oldUser.getName());
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
+            user.setName(userDto.getName());
         }
-        return userMapper.toUserDto(repository.save(user));
+        return userMapper.toUserDto(user);
     }
 
     @Override
     public void deleteUser(Long id) {
         repository.deleteById(id);
     }
-
 }

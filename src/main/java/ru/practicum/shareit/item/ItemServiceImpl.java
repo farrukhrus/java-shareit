@@ -145,9 +145,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ValidationException("Booking is not found"));
 
         Comment comment = commentMapper.toComment(createCommentDto, user, item, LocalDateTime.now());
-
         Comment savedComment = commentRepository.save(comment);
-
         return commentMapper.toCommentDto(savedComment);
     }
 }
