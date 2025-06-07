@@ -1,7 +1,9 @@
 package ru.practicum.shareit.user;
 
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import java.util.List;
 
@@ -13,31 +15,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAll() {
-        return repository.getAll().stream().map(userMapper::toUserDto).toList();
+        return repository.findAll().stream().map(userMapper::toUserDto).toList();
     }
 
     @Override
     public UserDto createUser(UserDto userDto) {
         User user = userMapper.toUser(userDto);
-        User createdUser = repository.createUser(user);
+        User createdUser = repository.save(user);
         return userMapper.toUserDto(createdUser);
     }
 
     @Override
     public UserDto getUserById(Long id) {
-        return userMapper.toUserDto(repository.getUserById(id));
+        return userMapper.toUserDto(repository.getById(id));
     }
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User user = userMapper.toUser(userDto);
-        user.setId(id);
-        User updatedUser = repository.updateUser(user);
-        return userMapper.toUserDto(updatedUser);
+        User user = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("User wit id %s is not found", id)));
+
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            if (repository.existsByEmailIgnoreCase(userDto.getEmail())) {
+                throw new ValidationException("Email already exists: " + userDto.getEmail());
+            }
+            user.setEmail(userDto.getEmail());
+        }
+
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
+            user.setName(userDto.getName());
+        }
+        return userMapper.toUserDto(user);
     }
 
     @Override
     public void deleteUser(Long id) {
-        repository.deleteUser(id);
+        repository.deleteById(id);
     }
 }
