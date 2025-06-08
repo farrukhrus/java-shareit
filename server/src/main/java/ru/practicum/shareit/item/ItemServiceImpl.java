@@ -147,14 +147,18 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ValidationException("User not found"));
 
-        Booking booking = bookingRepository
-                .findByItemIdAndBookerIdAndStatusAndEndIsBefore(itemId, userId, BookingStatus.APPROVED, LocalDateTime.now())
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new ValidationException("Booking is not found"));
+        List<Booking> bookings = bookingRepository
+                .findByItemIdAndBookerIdAndStatusAndEndIsBefore(itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
 
-        Comment comment = commentMapper.toComment(createCommentDto, user, item, LocalDateTime.now());
-        Comment savedComment = commentRepository.save(comment);
-        return commentMapper.toCommentDto(savedComment);
+        if (!bookings.isEmpty()) {
+            Comment comment = new Comment();
+            comment.setText(createCommentDto.getText());
+            comment.setItem(item);
+            comment.setAuthor(user);
+            comment.setCreated(LocalDateTime.now());
+            return commentMapper.toCommentDto(commentRepository.save(comment));
+        } else {
+            throw new ValidationException("Пользователь не бронировал эту вещь");
+        }
     }
 }
