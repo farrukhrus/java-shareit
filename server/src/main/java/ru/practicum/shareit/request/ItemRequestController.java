@@ -34,4 +34,11 @@ public class ItemRequestController {
         log.info("Get data by requestId = {}", requestId);
         return itemRequestService.getItemRequest(requestId);
     }
+
+    @GetMapping("/all")
+    public List<ItemRequestDto> getAllItemRequests(
+            @RequestHeader(HEADER_USER_ID) Long userId
+    ) {
+        return itemRequestService.getAllItemRequests(userId);
+    }
 }
