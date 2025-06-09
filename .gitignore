@@ -34,4 +34,3 @@ build/
 
 # Forbidden by CI policy
 checkstyle.xml
-api-tests.yml
