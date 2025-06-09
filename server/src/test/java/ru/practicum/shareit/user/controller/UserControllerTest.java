@@ -11,8 +11,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.user.UserController;
-import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -20,13 +20,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
+
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserControllerTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private static final String HEADER_USER_ID = "X-Sharer-User-Id";
     @MockBean
     private final UserService service;
     private UserDto userExpected;

@@ -11,17 +11,20 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.item.ItemController;
-import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.item.dto.CommentCreateDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemSaveDto;
-import ru.practicum.shareit.item.ItemService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
 
 @WebMvcTest(ItemController.class)
 @AutoConfigureMockMvc
@@ -30,7 +33,6 @@ public class ItemControllerTest {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private static final String HEADER_USER_ID = "X-Sharer-User-Id";
     @MockBean
     private final ItemService itemService;
     private ItemDto expectedItem;

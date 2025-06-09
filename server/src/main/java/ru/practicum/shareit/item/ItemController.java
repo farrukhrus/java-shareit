@@ -10,6 +10,8 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemSaveDto;
 
+import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
+
 import java.util.List;
 
 
@@ -18,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping(path = "/items")
 public class ItemController {
-    private static final String HEADER_USER_ID = "X-Sharer-User-Id";
     private final ItemService itemService;
 
     @GetMapping

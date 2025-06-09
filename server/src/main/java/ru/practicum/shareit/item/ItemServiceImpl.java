@@ -73,7 +73,8 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItem(Long itemId) {
         List<CommentDto> comments = commentRepository.findByItemId(itemId).stream()
                 .map(commentMapper::toCommentDto)
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
+        ;
         Item item = repository.findById(itemId).orElseThrow(() ->
                 new ValidationException("Item not found"));
         ItemDto itemDto = itemMapper.toItemDto(item);

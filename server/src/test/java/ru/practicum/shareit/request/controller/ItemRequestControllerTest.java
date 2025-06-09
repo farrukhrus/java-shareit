@@ -11,9 +11,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.request.ItemRequestController;
+import ru.practicum.shareit.request.ItemRequestService;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestSaveDto;
-import ru.practicum.shareit.request.ItemRequestService;
 
 import java.util.List;
 
@@ -27,13 +27,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
+
 @WebMvcTest(ItemRequestController.class)
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemRequestControllerTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private static final String HEADER_USER_ID = "X-Sharer-User-Id";
     @MockBean
     private final ItemRequestService service;
     private ItemRequestDto itemRequestExpected;
