@@ -52,6 +52,7 @@ public class BookingController {
     public ResponseEntity<Object> approved(@RequestHeader(HEADER_USER_ID) Long userId,
                                            @PathVariable("bookingId") Long bookingId,
                                            @RequestParam Boolean approved) {
+        log.info("Set booking {} by userId={} as approved", bookingId, userId);
         return bookingClient.approved(userId, bookingId, approved);
     }
 
@@ -60,7 +61,7 @@ public class BookingController {
                                                           @RequestParam(defaultValue = "ALL") String state) {
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new ValidationException("State имеет неизвестное значение."));
-
+        log.info("Get bookings by userId={} with state {}", userId, state);
         return bookingClient.getUserItemsBookings(userId, bookingState);
     }
 }
