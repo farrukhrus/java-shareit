@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
@@ -16,6 +15,7 @@ import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.exception.ValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;

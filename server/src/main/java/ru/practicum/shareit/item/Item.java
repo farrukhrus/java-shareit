@@ -1,8 +1,6 @@
 package ru.practicum.shareit.item;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
@@ -21,15 +19,12 @@ public class Item {
     private Long id;
 
     @Column(length = 50, nullable = false)
-    @NotBlank
     private String name;
 
     @Column(length = 500, nullable = false)
-    @NotBlank
     private String description;
 
     @Column(name = "is_available", nullable = false)
-    @NotNull
     private boolean available;
 
     @ManyToOne

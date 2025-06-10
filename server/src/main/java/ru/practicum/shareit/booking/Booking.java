@@ -1,9 +1,6 @@
 package ru.practicum.shareit.booking;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.user.User;
@@ -23,24 +20,18 @@ public class Booking {
     private Long id;
 
     @Column(name = "start_date", nullable = false)
-    @NotNull
-    @FutureOrPresent
     private LocalDateTime start;
 
     @Column(name = "end_date", nullable = false)
-    @NotNull
-    @Future
     private LocalDateTime end;
 
     @ManyToOne
     @ToString.Exclude
-    @NotNull
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
     @ManyToOne
     @ToString.Exclude
-    @NotNull
     @JoinColumn(name = "booker_id", nullable = false)
     private User booker;
 

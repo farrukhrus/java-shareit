@@ -1,10 +1,10 @@
 package ru.practicum.shareit.user;
 
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.exception.ValidationException;
 
 import java.util.List;
 

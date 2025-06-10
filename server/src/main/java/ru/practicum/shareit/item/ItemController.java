@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +39,7 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<ItemDto> create(
             @RequestHeader(HEADER_USER_ID) Long userId,
-            @Valid @RequestBody ItemSaveDto itemSaveDto) {
+            @RequestBody ItemSaveDto itemSaveDto) {
         log.info("Creating item");
         ItemDto createdItem = itemService.createItem(itemSaveDto, userId);
         return ResponseEntity.ok(createdItem);
@@ -75,7 +74,7 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<CommentDto> addComment(@RequestHeader(HEADER_USER_ID) Long userId,
                                                  @PathVariable Long itemId,
-                                                 @Valid @RequestBody CommentCreateDto commentDto) {
+                                                 @RequestBody CommentCreateDto commentDto) {
         CommentDto addedComment = itemService.addComment(itemId, userId, commentDto);
         return ResponseEntity.ok(addedComment);
     }
