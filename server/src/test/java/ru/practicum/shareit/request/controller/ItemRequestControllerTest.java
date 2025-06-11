@@ -35,25 +35,38 @@ import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
 class ItemRequestControllerTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
+
     @MockBean
     private final ItemRequestService service;
+
     private ItemRequestDto itemRequestExpected;
+    private ItemRequestSaveDto itemRequestSaveDto;
+    private String itemRequestJson;
+    private String itemRequestExpectedJson;
+    private List<ItemRequestDto> itemRequestsExpected;
+    private String itemRequestsExpectedJson;
+    private Long userId;
 
     @BeforeEach
-    public void testInit() {
+    public void testInit() throws Exception {
+        userId = 1L;
+
         itemRequestExpected = new ItemRequestDto();
         itemRequestExpected.setId(1L);
         itemRequestExpected.setDescription("description");
+
+        itemRequestSaveDto = new ItemRequestSaveDto();
+        itemRequestSaveDto.setDescription("description");
+
+        itemRequestJson = objectMapper.writeValueAsString(itemRequestSaveDto);
+        itemRequestExpectedJson = objectMapper.writeValueAsString(itemRequestExpected);
+
+        itemRequestsExpected = List.of(itemRequestExpected);
+        itemRequestsExpectedJson = objectMapper.writeValueAsString(itemRequestsExpected);
     }
 
     @Test
     void testCreateItemRequest() throws Exception {
-        Long userId = 1L;
-        ItemRequestSaveDto itemRequest = new ItemRequestSaveDto();
-        itemRequest.setDescription(itemRequestExpected.getDescription());
-        String itemRequestJson = objectMapper.writeValueAsString(itemRequest);
-        String itemRequestExpectedJson = objectMapper.writeValueAsString(itemRequestExpected);
-
         when(service.createItemRequest(any(Long.class), any(ItemRequestSaveDto.class)))
                 .thenReturn(itemRequestExpected);
 
@@ -71,10 +84,6 @@ class ItemRequestControllerTest {
 
     @Test
     void testGetAllUserItemRequest() throws Exception {
-        Long userId = 10L;
-        List<ItemRequestDto> itemRequestsExpected = List.of(itemRequestExpected);
-        String itemRequestsExpectedJson = objectMapper.writeValueAsString(itemRequestsExpected);
-
         when(service.getAllUserItemRequestsWithItems(eq(userId)))
                 .thenReturn(itemRequestsExpected);
 
@@ -90,8 +99,7 @@ class ItemRequestControllerTest {
     @Test
     void testGetAllItemRequests() throws Exception {
         Long itemRequestId = itemRequestExpected.getId();
-        String path = "/requests" + "/" + itemRequestId;
-        String itemRequestExpectedJson = objectMapper.writeValueAsString(itemRequestExpected);
+        String path = "/requests/" + itemRequestId;
 
         when(service.getItemRequest(eq(itemRequestId)))
                 .thenReturn(itemRequestExpected);
@@ -106,7 +114,6 @@ class ItemRequestControllerTest {
 
     @Test
     void testGetAll() throws Exception {
-        Long userId = 10L;
         String path = "/requests/all";
 
         when(service.getAllItemRequests(userId))

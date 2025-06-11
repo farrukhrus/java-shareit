@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,26 +25,34 @@ public class UserServiceImplTest {
 
     @Mock
     private UserMapper userMapper;
+
     @Mock
     private UserRepository userRepository;
-    private final User user1 = new User(1L, "User1", "user1@example.com");
-    private final UserDto userDto1 = new UserDto(1L, "User1", "user1@example.com");
-    private final UserDto userSaveDto1 = new UserDto(null, "User1", "user1@example.com");
-    private final User user2 = new User(2L, "User2", "user2@example.com");
-    private final UserDto userDto2 = new UserDto(2L, "User2", "user2@example.com");
+
+    private User user1;
+    private User user2;
+    private UserDto userDto1;
+    private UserDto userDto2;
+    private UserDto userSaveDto1;
+
+    @BeforeEach
+    void setUp() {
+        user1 = new User(1L, "User1", "user1@example.com");
+        user2 = new User(2L, "User2", "user2@example.com");
+        userDto1 = new UserDto(1L, "User1", "user1@example.com");
+        userDto2 = new UserDto(2L, "User2", "user2@example.com");
+        userSaveDto1 = new UserDto(null, "User1", "user1@example.com");
+    }
 
     @Test
     void testGetAllUsers() {
-
-        Mockito.when(userRepository.findAll())
-                .thenReturn(List.of(user1, user2));
-
+        Mockito.when(userRepository.findAll()).thenReturn(List.of(user1, user2));
         Mockito.when(userMapper.toUserDto(user1)).thenReturn(userDto1);
         Mockito.when(userMapper.toUserDto(user2)).thenReturn(userDto2);
 
         List<UserDto> users = userService.getAll();
 
-        assertEquals(users, List.of(userDto1, userDto2));
+        assertEquals(List.of(userDto1, userDto2), users);
     }
 
     @Test
@@ -69,30 +78,30 @@ public class UserServiceImplTest {
 
     @Test
     void testUpdateUser() {
-        Mockito.when(userRepository.findById(1L))
-                .thenReturn(Optional.of(user1));
-        UserDto updateUserAfterDto = new UserDto(1L, "updateUser", "updateUser@example.com");
-        UserDto updateUserDto = new UserDto(null, "updateUser", "updateUser@example.com");
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
 
-        Mockito.when(userMapper.toUserDto(Mockito.any(User.class)))
-                .thenReturn(updateUserAfterDto);
+        UserDto updateUserDto = new UserDto(null, "updateUser", "updateUser@example.com");
+        UserDto expectedDto = new UserDto(1L, "updateUser", "updateUser@example.com");
+
+        Mockito.when(userMapper.toUserDto(Mockito.any(User.class))).thenReturn(expectedDto);
 
         UserDto result = userService.updateUser(1L, updateUserDto);
 
-        assertEquals(updateUserAfterDto, result);
+        assertEquals(expectedDto, result);
     }
 
     @Test
     void testUpdateUserName() {
-        UserDto updateUserDto = new UserDto(null, null, "updatedUser@example.com");
-        UserDto updatedDto = new UserDto(1L, null, "updatedUser@example.com");
-
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
-        Mockito.when(userMapper.toUserDto(Mockito.any(User.class))).thenReturn(updatedDto);
+
+        UserDto updateUserDto = new UserDto(null, null, "updatedUser@example.com");
+        UserDto expectedDto = new UserDto(1L, null, "updatedUser@example.com");
+
+        Mockito.when(userMapper.toUserDto(Mockito.any(User.class))).thenReturn(expectedDto);
 
         var result = userService.updateUser(1L, updateUserDto);
 
-        assertEquals(updatedDto, result);
+        assertEquals(expectedDto, result);
     }
 
     @Test
@@ -100,13 +109,13 @@ public class UserServiceImplTest {
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
 
         UserDto updateUserDto = new UserDto(null, "updateUser", null);
-        UserDto updateUserAfterDto = new UserDto(1L, "updateUser", null);
+        UserDto expectedDto = new UserDto(1L, "updateUser", null);
 
-        Mockito.when(userMapper.toUserDto(Mockito.any(User.class))).thenReturn(updateUserAfterDto);
+        Mockito.when(userMapper.toUserDto(Mockito.any(User.class))).thenReturn(expectedDto);
 
         UserDto result = userService.updateUser(1L, updateUserDto);
 
-        assertEquals(updateUserAfterDto, result);
+        assertEquals(expectedDto, result);
     }
 
     @Test

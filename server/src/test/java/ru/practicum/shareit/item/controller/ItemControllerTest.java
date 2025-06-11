@@ -33,14 +33,21 @@ public class ItemControllerTest {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
+
     @MockBean
     private final ItemService itemService;
+
     private ItemDto expectedItem;
     private CommentDto expectedComment;
+    private ItemSaveDto itemSaveDto;
+    private String itemSaveDtoJson;
+    private String itemDtoExpectedJson;
+    private CommentCreateDto commentCreateDto;
+    private String commentCreateDtoJson;
     private Long userId;
 
     @BeforeEach
-    public void testInit() {
+    public void testInit() throws Exception {
         userId = 1L;
 
         expectedItem = new ItemDto();
@@ -49,24 +56,28 @@ public class ItemControllerTest {
         expectedItem.setDescription("description");
         expectedItem.setAvailable("false");
 
+        itemSaveDto = new ItemSaveDto();
+        itemSaveDto.setName("item");
+        itemSaveDto.setDescription("description");
+        itemSaveDto.setAvailable(false);
+
+        itemSaveDtoJson = objectMapper.writeValueAsString(itemSaveDto);
+        itemDtoExpectedJson = objectMapper.writeValueAsString(expectedItem);
+
         expectedComment = new CommentDto();
         expectedComment.setId(1L);
         expectedComment.setText("comment");
         expectedComment.setAuthorName("user1");
         expectedComment.setCreated(null);
+
+        commentCreateDto = new CommentCreateDto();
+        commentCreateDto.setText("Text");
+        commentCreateDtoJson = objectMapper.writeValueAsString(commentCreateDto);
     }
 
     @Test
     void testCreateItem() throws Exception {
-        ItemSaveDto itemSaveDto = new ItemSaveDto();
-        itemSaveDto.setName("item");
-        itemSaveDto.setDescription("description");
-        itemSaveDto.setAvailable(false);
-        String itemSaveDtoJson = objectMapper.writeValueAsString(itemSaveDto);
-        String itemDtoExpectedJson = objectMapper.writeValueAsString(expectedItem);
-
-        when(itemService.createItem(any(ItemSaveDto.class), any(Long.class)))
-                .thenReturn(expectedItem);
+        when(itemService.createItem(any(ItemSaveDto.class), any(Long.class))).thenReturn(expectedItem);
 
         mockMvc.perform(post("/items")
                         .header(HEADER_USER_ID, String.valueOf(userId))
@@ -77,22 +88,18 @@ public class ItemControllerTest {
                 .andExpect(content().json(itemDtoExpectedJson));
 
         verify(itemService, times(1)).createItem(any(ItemSaveDto.class), any(Long.class));
-
     }
 
     @Test
     void testAddComment() throws Exception {
-        final CommentDto commentInfoDto = new CommentDto();
-        commentInfoDto.setText("Text");
-
-        when(itemService.addComment(anyLong(), anyLong(), any(CommentCreateDto.class))).thenReturn(commentInfoDto);
+        when(itemService.addComment(anyLong(), anyLong(), any(CommentCreateDto.class))).thenReturn(expectedComment);
 
         mockMvc.perform(post("/items/1/comment")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header(HEADER_USER_ID, 1)
-                        .content("{\"text\": \"Text\"}"))
+                        .header(HEADER_USER_ID, userId)
+                        .content(commentCreateDtoJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.text").value("Text"));
+                .andExpect(jsonPath("$.text").value("comment"));
 
         verify(itemService, times(1)).addComment(anyLong(), anyLong(), any(CommentCreateDto.class));
     }
@@ -100,12 +107,13 @@ public class ItemControllerTest {
     @Test
     void testUpdateItem() throws Exception {
         final ItemDto itemDto = new ItemDto();
+        itemDto.setId(1L);
 
         when(itemService.updateItem(any(ItemDto.class), anyLong())).thenReturn(itemDto);
 
         mockMvc.perform(patch("/items/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header(HEADER_USER_ID, 1L)
+                        .header(HEADER_USER_ID, userId)
                         .content("{\"name\": \"Updated item\", \"description\": \"Updated description\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(itemDto.getId()));

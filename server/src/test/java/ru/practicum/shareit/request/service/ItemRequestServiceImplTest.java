@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,10 +9,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.request.ItemRequestMapper;
-import ru.practicum.shareit.request.ItemRequestRepository;
-import ru.practicum.shareit.request.ItemRequestServiceImpl;
+import ru.practicum.shareit.request.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestSaveDto;
 import ru.practicum.shareit.user.User;
@@ -29,43 +27,52 @@ class ItemRequestServiceImplTest {
     @InjectMocks
     private ItemRequestServiceImpl itemRequestService;
 
-    @Mock
-    private ItemRequestRepository itemRequestRepository;
+    @Mock private ItemRequestRepository itemRequestRepository;
+    @Mock private ItemRequestMapper itemRequestMapper;
+    @Mock private UserRepository userRepository;
+    @Mock private ItemRepository itemRepository;
 
-    @Mock
-    private ItemRequestMapper itemRequestMapper;
+    private User user;
+    private User user2;
+    private UserDto userDto;
+    private UserDto userDto2;
+    private ItemRequest itemRequest;
+    private ItemRequestSaveDto itemRequestSaveDto;
+    private ItemRequestDto itemRequestDto;
+    private ItemRequestDto itemRequestDto2;
 
-    @Mock
-    private UserRepository userRepository;
+    @BeforeEach
+    void setUp() {
+        user = new User(1L, "User", "user@email.com");
+        user2 = new User(2L, "User2", "user2@email.com");
 
-    @Mock
-    private ItemRepository itemRepository;
+        userDto = new UserDto(1L, "User", "user@email.com");
+        userDto2 = new UserDto(2L, "User2", "user@email.com");
 
-    private final User user = new User(1L, "User", "user@email.com");
-    private final UserDto userDto = new UserDto(1L, "User", "user@email.com");
-    private final User user2 = new User(2L, "User2", "user2@email.com");
-    private final UserDto userDto2 = new UserDto(2L, "User2", "user@email.com");
-    private final ItemRequest itemRequest = ItemRequest.builder()
-            .id(1L)
-            .requester(user)
-            .description("description")
-            .build();
-    private final ItemRequestSaveDto itemRequestSaveDto = ItemRequestSaveDto.builder()
-            .description("New item request")
-            .build();
-    private final ItemRequestDto itemRequestDto = ItemRequestDto.builder()
-            .id(itemRequest.getId())
-            .description(itemRequest.getDescription())
-            .requester(user)
-            .items(Collections.emptyList())
-            .build();
+        itemRequest = ItemRequest.builder()
+                .id(1L)
+                .requester(user)
+                .description("description")
+                .build();
 
-    private final ItemRequestDto itemRequestDto2 = ItemRequestDto.builder()
-            .id(itemRequest.getId())
-            .description(itemRequest.getDescription())
-            .requester(user2)
-            .items(Collections.emptyList())
-            .build();
+        itemRequestSaveDto = ItemRequestSaveDto.builder()
+                .description("New item request")
+                .build();
+
+        itemRequestDto = ItemRequestDto.builder()
+                .id(itemRequest.getId())
+                .description(itemRequest.getDescription())
+                .requester(user)
+                .items(Collections.emptyList())
+                .build();
+
+        itemRequestDto2 = ItemRequestDto.builder()
+                .id(itemRequest.getId())
+                .description(itemRequest.getDescription())
+                .requester(user2)
+                .items(Collections.emptyList())
+                .build();
+    }
 
     @Test
     void testGetAllUserItemRequestsWithItemsReturnItemRequests() {

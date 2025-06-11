@@ -29,67 +29,59 @@ class ItemServiceImplTest {
     @InjectMocks
     private ItemServiceImpl itemService;
 
-    @Mock
-    private ItemRepository itemRepository;
+    @Mock private ItemRepository itemRepository;
+    @Mock private BookingRepository bookingRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private CommentRepository commentRepository;
+    @Mock private ItemMapper itemMapper;
+    @Mock private UserService userService;
+    @Mock private ItemRequestRepository itemRequestRepository;
 
-    @Mock
-    private BookingRepository bookingRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private CommentRepository commentRepository;
-
-    @Mock
-    private ItemMapper itemMapper;
-
-    @Mock
-    UserService userService;
-
-    @Mock
-    ItemRequestRepository itemRequestRepository;
-
-    private final User user = new User(1L, "User", "user@email.com");
-
-    private final ItemRequest request = ItemRequest.builder()
-            .id(1L)
-            .description("description")
-            .requester(user)
-            .items(new ArrayList<>())
-            .build();
-    private final Item item = Item.builder()
-            .id(1L)
-            .name("ItemName")
-            .description("description")
-            .available(true)
-            .owner(user)
-            .request(request)
-            .build();
-    ItemDto mappedDto;
-    Item mappedItem;
-    ItemRequest itemRequest1;
-    User user1;
-    ItemSaveDto itemDto1;
+    private User user;
+    private User user1;
+    private ItemRequest itemRequest;
+    private ItemRequest itemRequest1;
+    private Item item;
+    private Item mappedItem;
+    private ItemDto mappedDto;
+    private ItemSaveDto itemDto1;
 
     @BeforeEach
-    public void set() {
-        itemDto1 = new ItemSaveDto();
-        itemDto1.setName("Sock");
-        itemDto1.setDescription("Black");
-        itemDto1.setAvailable(false);
-        itemDto1.setRequestId(1L);
+    public void setUp() {
+        user = new User(1L, "User", "user@email.com");
 
         user1 = new User();
         user1.setId(1L);
         user1.setName("Petya");
         user1.setEmail("pupkin@example.com");
 
+        itemRequest = ItemRequest.builder()
+                .id(1L)
+                .description("description")
+                .requester(user)
+                .items(new ArrayList<>())
+                .build();
+
         itemRequest1 = new ItemRequest();
         itemRequest1.setId(1L);
         itemRequest1.setDescription("New sock");
         itemRequest1.setRequester(user1);
         itemRequest1.setCreated(LocalDateTime.now());
+
+        item = Item.builder()
+                .id(1L)
+                .name("ItemName")
+                .description("description")
+                .available(true)
+                .owner(user)
+                .request(itemRequest)
+                .build();
+
+        itemDto1 = new ItemSaveDto();
+        itemDto1.setName("Sock");
+        itemDto1.setDescription("Black");
+        itemDto1.setAvailable(false);
+        itemDto1.setRequestId(1L);
 
         mappedItem = Item.builder()
                 .id(1L)

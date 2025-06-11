@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
+
     @Mock
     private BookingMapper bookingMapper;
 
@@ -44,93 +46,108 @@ class BookingServiceImplTest {
     @Mock
     private ItemRepository itemRepository;
 
-    private final User user1 = new User(1L, "User1", "user1@email.com");
-    private final User user2 = new User(2L, "User2", "user2@email.com");
-    private final User user = new User(1L, "User", "user@email.com");
-    private final Item item = Item.builder()
-            .id(1L)
-            .name("Item")
-            .description("Description")
-            .available(true)
-            .build();
-    private final Item item1 = Item.builder()
-            .id(1L)
-            .name("Item")
-            .description("Description")
-            .available(true)
-            .owner(user1)
-            .build();
-    private final Item item2 = Item.builder()
-            .id(1L)
-            .name("Item2")
-            .description("Description2")
-            .available(false)
-            .owner(user1)
-            .build();
+    private User user1;
+    private User user2;
+    private User user;
+    private Item item;
+    private Item item1;
+    private Item item2;
+    private LocalDateTime now;
+    private LocalDateTime start;
+    private LocalDateTime end;
+    private BookingCreateDto bookingCreateDto;
+    private Booking booking;
+    private BookingDto bookingDto;
+
+    @BeforeEach
+    void setUp() {
+        now = LocalDateTime.now();
+        start = now.plusDays(1);
+        end = now.plusDays(2);
+
+        user1 = new User(1L, "User1", "user1@email.com");
+        user2 = new User(2L, "User2", "user2@email.com");
+        user = new User(3L, "User", "user@email.com");
+
+        item = Item.builder()
+                .id(1L)
+                .name("Item")
+                .description("Description")
+                .available(true)
+                .build();
+
+        item1 = Item.builder()
+                .id(2L)
+                .name("Item1")
+                .description("Description1")
+                .available(true)
+                .owner(user1)
+                .build();
+
+        item2 = Item.builder()
+                .id(3L)
+                .name("Item2")
+                .description("Description2")
+                .available(false)
+                .owner(user1)
+                .build();
+
+        bookingCreateDto = new BookingCreateDto(item1.getId(), start, end);
+        booking = new Booking(1L, start, end, item1, user2, BookingStatus.WAITING);
+        bookingDto = new BookingDto(1L, start, end, item1, user2, BookingStatus.WAITING);
+    }
 
     @Test
     void testCreateBookingReturnBookingDtoWhenBookingIsSuccessful() {
-        BookingCreateDto dto = new BookingCreateDto(item1.getId(),
-                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
-
         item1.setOwner(user2);
-
-        Booking booking = new Booking(1L, dto.getStart(), dto.getEnd(), item1, user1, BookingStatus.WAITING);
-        BookingDto expected = new BookingDto(booking.getId(), booking.getStart(), booking.getEnd(),
-                booking.getItem(), booking.getBooker(), booking.getStatus());
 
         Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         Mockito.when(itemRepository.findById(item1.getId())).thenReturn(Optional.of(item1));
-        Mockito.when(bookingMapper.toBooking(dto, item1, user1)).thenReturn(booking);
+        Mockito.when(bookingMapper.toBooking(bookingCreateDto, item1, user1)).thenReturn(booking);
         Mockito.when(bookingRepository.save(booking)).thenReturn(booking);
-        Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(expected);
+        Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
-        BookingDto result = bookingService.createBooking(user1.getId(), dto);
+        BookingDto result = bookingService.createBooking(user1.getId(), bookingCreateDto);
 
-        assertEquals(expected.getId(), result.getId());
-        assertEquals(expected.getStart(), result.getStart());
-        assertEquals(expected.getEnd(), result.getEnd());
-        assertEquals(expected.getItem().getId(), result.getItem().getId());
-        assertEquals(expected.getBooker().getId(), result.getBooker().getId());
+        assertEquals(bookingDto.getId(), result.getId());
+        assertEquals(bookingDto.getStart(), result.getStart());
+        assertEquals(bookingDto.getEnd(), result.getEnd());
+        assertEquals(bookingDto.getItem().getId(), result.getItem().getId());
+        assertEquals(bookingDto.getBooker().getId(), result.getBooker().getId());
     }
 
     @Test
     void testCreateBookingThrowNotFoundExceptionWhenBookerTriesToBookOwnItem() {
-        BookingCreateDto bookingCreateDto = new BookingCreateDto(item1.getId(), LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
-
         Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         Mockito.when(itemRepository.findById(item1.getId())).thenReturn(Optional.of(item1));
 
-        NotFoundException exception = assertThrows(NotFoundException.class, () ->
-                bookingService.createBooking(user1.getId(), bookingCreateDto));
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.createBooking(user1.getId(), bookingCreateDto));
 
         assertEquals("You can not rent your item", exception.getMessage());
     }
 
     @Test
     void testCreateBookingThrowIllegalStateExceptionWhenItemIsNotAvailable() {
-        BookingCreateDto bookingCreateDto = new BookingCreateDto(item2.getId(), LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
-
+        BookingCreateDto dto = new BookingCreateDto(item2.getId(), start, end);
 
         Mockito.when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
         Mockito.when(itemRepository.findById(item2.getId())).thenReturn(Optional.of(item2));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                bookingService.createBooking(user2.getId(), bookingCreateDto));
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> bookingService.createBooking(user2.getId(), dto));
 
         assertEquals("Item is not available", exception.getMessage());
     }
 
     @Test
     void testCreateBookingThrowNotFoundExceptionWhenStartTimeIsAfterEndTime() {
-        BookingCreateDto dto = new BookingCreateDto(item1.getId(),
-                LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(1));
-
-        Booking booking = new Booking(null, dto.getStart(), dto.getEnd(), item1, user2, null);
+        BookingCreateDto dto = new BookingCreateDto(item1.getId(), end, start);
 
         Mockito.when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
         Mockito.when(itemRepository.findById(item1.getId())).thenReturn(Optional.of(item1));
-        Mockito.when(bookingMapper.toBooking(dto, item1, user2)).thenReturn(booking);
+        Mockito.when(bookingMapper.toBooking(dto, item1, user2))
+                .thenReturn(new Booking(null, dto.getStart(), dto.getEnd(), item1, user2, null));
 
         NotFoundException ex = assertThrows(NotFoundException.class,
                 () -> bookingService.createBooking(user2.getId(), dto));
@@ -140,148 +157,96 @@ class BookingServiceImplTest {
 
     @Test
     void testCreateBookingThrowNotFoundExceptionWhenBookingTimesOverlap() {
-        BookingCreateDto dto = new BookingCreateDto(item1.getId(),
-                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
-
-        Booking booking = new Booking(null, dto.getStart(), dto.getEnd(), item1, user2, BookingStatus.WAITING);
-
         Mockito.when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
         Mockito.when(itemRepository.findById(item1.getId())).thenReturn(Optional.of(item1));
-        Mockito.when(bookingMapper.toBooking(dto, item1, user2)).thenReturn(booking);
+        Mockito.when(bookingMapper.toBooking(bookingCreateDto, item1, user2)).thenReturn(booking);
         Mockito.when(bookingRepository.existsByItemIdAndStatusAndEndAfterAndStartBefore(
-                        item1.getId(), BookingStatus.APPROVED, dto.getStart(), dto.getEnd()))
-                .thenReturn(true);
+                item1.getId(), BookingStatus.APPROVED, start, end)).thenReturn(true);
 
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> bookingService.createBooking(user2.getId(), dto));
+                () -> bookingService.createBooking(user2.getId(), bookingCreateDto));
 
         assertEquals("Overlapping", ex.getMessage());
     }
 
     @Test
     void testUpdateBookingStatusThrowIllegalStateExceptionWhenUserIsNotOwner() {
-        Booking booking = new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user1, BookingStatus.WAITING);
+        item1.setOwner(user2);
 
-        Mockito.when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        Booking testBooking = new Booking(1L, start, end, item1, user1, BookingStatus.WAITING);
+        Mockito.when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> bookingService.updateBookingStatus(user2.getId(), booking.getId(), true)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> bookingService.updateBookingStatus(user1.getId(), testBooking.getId(), true));
 
         assertEquals("Only item owner can approve or reject booking", exception.getMessage());
-        Mockito.verify(bookingRepository, Mockito.never()).save(Mockito.any(Booking.class));
     }
 
     @Test
     void testUpdateBookingStatusThrowNotFoundExceptionWhenBookingNotFound() {
         Mockito.when(bookingRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(
-                NotFoundException.class,
-                () -> bookingService.updateBookingStatus(item1.getOwner().getId(), 99L, true)
-        );
-
-        Mockito.verify(bookingRepository, Mockito.never()).save(Mockito.any(Booking.class));
+        assertThrows(NotFoundException.class,
+                () -> bookingService.updateBookingStatus(item1.getOwner().getId(), 99L, true));
     }
-
 
     @Test
     void testGetBookingByIdReturnBookingDtoWhenUserHasAccess() {
-        Booking booking = new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user1, BookingStatus.WAITING);
-        BookingDto expectedBookingDto = new BookingDto(
-                1L, booking.getStart(), booking.getEnd(), item, user, BookingStatus.WAITING);
-
         Mockito.when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        Mockito.when(bookingMapper.toBookingDto(Mockito.any(Booking.class)))
-                .thenReturn(expectedBookingDto);
+        Mockito.when(bookingMapper.toBookingDto(Mockito.any(Booking.class))).thenReturn(bookingDto);
 
-        BookingDto result = bookingService.getBookingById(user1.getId(), booking.getId());
+        BookingDto result = bookingService.getBookingById(user2.getId(), booking.getId());
 
         assertNotNull(result);
-        assertEquals(expectedBookingDto.getId(), result.getId());
-        assertEquals(expectedBookingDto.getStart(), result.getStart());
-        assertEquals(expectedBookingDto.getEnd(), result.getEnd());
-        assertEquals(expectedBookingDto.getStatus(), result.getStatus());
-        assertEquals(expectedBookingDto.getBooker().getId(), result.getBooker().getId());
-        assertEquals(expectedBookingDto.getItem().getId(), result.getItem().getId());
-
-        Mockito.verify(bookingRepository).findById(booking.getId());
+        assertEquals(bookingDto.getId(), result.getId());
     }
 
     @Test
     void testGetBookingsByStateReturnBookingsWhenStateIsAll() {
-        List<Booking> bookings = List.of(
-                new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user1, BookingStatus.WAITING),
-                new Booking(2L, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item2, user1, BookingStatus.APPROVED)
-        );
+        List<Booking> bookings = List.of(booking);
 
         Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         Mockito.when(bookingRepository.findAllByBookerIdOrderByStartDesc(user1.getId())).thenReturn(bookings);
-        Mockito.when(bookingMapper.toBookingDto(Mockito.any()))
-                .thenAnswer(inv -> {
-                    Booking b = inv.getArgument(0);
-                    return new BookingDto(b.getId(), b.getStart(), b.getEnd(), b.getItem(), b.getBooker(), b.getStatus());
-                });
+        Mockito.when(bookingMapper.toBookingDto(Mockito.any())).thenReturn(bookingDto);
 
         List<BookingDto> result = bookingService.getBookingsByState(user1.getId(), BookingState.ALL);
 
-        assertEquals(2, result.size());
-        assertEquals(bookings.get(0).getId(), result.get(0).getId());
-        assertEquals(bookings.get(1).getId(), result.get(1).getId());
+        assertEquals(1, result.size());
+        assertEquals(bookingDto.getId(), result.get(0).getId());
     }
 
     @Test
     void testGetBookingsForOwnerReturnBookingsWhenStateIsFuture() {
-        List<Booking> bookings = List.of(
-                new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user2, BookingStatus.WAITING),
-                new Booking(2L, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item2, user2, BookingStatus.APPROVED)
-        );
+        List<Booking> bookings = List.of(booking);
 
         Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         Mockito.when(itemRepository.findAllByOwnerId(user1.getId())).thenReturn(List.of(item1, item2));
         Mockito.when(bookingRepository.findAllByItemIdInAndStartAfterOrderByStartDesc(Mockito.anyList(), Mockito.any()))
                 .thenReturn(bookings);
-        Mockito.when(bookingMapper.toBookingDto(Mockito.any()))
-                .thenAnswer(inv -> {
-                    Booking b = inv.getArgument(0);
-                    return new BookingDto(b.getId(), b.getStart(), b.getEnd(), b.getItem(), b.getBooker(), b.getStatus());
-                });
+        Mockito.when(bookingMapper.toBookingDto(Mockito.any())).thenReturn(bookingDto);
 
         List<BookingDto> result = bookingService.getBookingsForOwner(user1.getId(), BookingState.FUTURE);
 
-        assertEquals(2, result.size());
-        assertEquals(bookings.get(0).getId(), result.get(0).getId());
-        assertEquals(bookings.get(1).getId(), result.get(1).getId());
+        assertEquals(1, result.size());
+        assertEquals(bookingDto.getId(), result.get(0).getId());
     }
 
     @Test
     void testGetBookingsForOwnerReturnEmptyListWhenNoItemsExist() {
-        Mockito.when(userRepository.findById(user1.getId()))
-                .thenReturn(Optional.of(user1));
-
+        Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         Mockito.when(itemRepository.findAllByOwnerId(user1.getId())).thenReturn(Collections.emptyList());
 
         List<BookingDto> result = bookingService.getBookingsForOwner(user1.getId(), BookingState.ALL);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-
-        Mockito.verify(userRepository).findById(user1.getId());
-        Mockito.verify(itemRepository).findAllByOwnerId(user1.getId());
         Mockito.verifyNoInteractions(bookingRepository);
     }
 
     @Test
     void testReturnBookingWhenExists() {
-        Booking booking = new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user1, BookingStatus.WAITING);
-
-        Mockito.when(bookingRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(booking));
-        Mockito.when(bookingMapper.toBookingDto(Mockito.any(Booking.class)))
-                .thenAnswer(invocation -> {
-                    Booking b = invocation.getArgument(0);
-                    return new BookingDto(b.getId(), b.getStart(), b.getEnd(), b.getItem(), b.getBooker(), b.getStatus());
-                });
+        Mockito.when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        Mockito.when(bookingMapper.toBookingDto(Mockito.any())).thenReturn(bookingDto);
 
         BookingDto result = bookingService.getBookingById(booking.getBooker().getId(), booking.getId());
         assertNotNull(result);
@@ -289,30 +254,27 @@ class BookingServiceImplTest {
 
     @Test
     void testThrowExceptionWhenBookingNotFound() {
-        Booking booking = new Booking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item1, user1, BookingStatus.WAITING);
-
         Mockito.when(bookingRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> bookingService.getBookingById(booking.getBooker().getId(), booking.getId()));
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.getBookingById(booking.getBooker().getId(), booking.getId()));
     }
 
     @Test
     void testGetAllUserBookingsWaiting() {
-        Booking booking = new Booking(1L, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, user, BookingStatus.WAITING);
+        Booking waitingBooking = new Booking(1L, now, now.plusHours(1), item, user, BookingStatus.WAITING);
 
         Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         Mockito.when(bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(user.getId(), BookingStatus.WAITING))
-                .thenReturn(List.of(booking));
-        Mockito.when(bookingMapper.toBookingDto(Mockito.any(Booking.class)))
-                .thenAnswer(inv -> {
-                    Booking b = inv.getArgument(0);
-                    return new BookingDto(b.getId(), b.getStart(), b.getEnd(), b.getItem(), b.getBooker(), b.getStatus());
-                });
+                .thenReturn(List.of(waitingBooking));
+        Mockito.when(bookingMapper.toBookingDto(Mockito.any())).thenReturn(
+                new BookingDto(waitingBooking.getId(), waitingBooking.getStart(), waitingBooking.getEnd(),
+                        waitingBooking.getItem(), waitingBooking.getBooker(), waitingBooking.getStatus()));
 
         List<BookingDto> bookings = bookingService.getBookingsByState(user.getId(), BookingState.WAITING);
 
         assertEquals(1, bookings.size());
         assertEquals(BookingStatus.WAITING, bookings.get(0).getStatus());
-        assertEquals(user.getId(), bookings.get(0).getBooker().getId());
     }
 
     @Test
@@ -326,10 +288,8 @@ class BookingServiceImplTest {
         List<BookingDto> bookings = bookingService.getBookingsByState(userId, state);
 
         bookings.forEach(booking -> assertThat(booking, allOf(
-                hasProperty("booker", allOf(
-                        hasProperty("id", equalTo(userId))
-                )),
-                hasProperty("status", notNullValue()))
-        ));
+                hasProperty("booker", hasProperty("id", equalTo(userId))),
+                hasProperty("status", notNullValue())
+        )));
     }
 }

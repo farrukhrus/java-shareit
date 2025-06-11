@@ -28,29 +28,36 @@ import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
 class UserControllerTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
+
     @MockBean
     private final UserService service;
+
     private UserDto userExpected;
+    private UserDto userSaveDto;
+    private String userSaveDtoJson;
+    private String userDtoExpectedJson;
+    private Long userId;
 
     @BeforeEach
-    void testInit() {
+    void testInit() throws Exception {
         userExpected = new UserDto();
         userExpected.setId(1L);
         userExpected.setName("user1");
         userExpected.setEmail("user1@example.com");
+
+        userSaveDto = new UserDto();
+        userSaveDto.setName(userExpected.getName());
+        userSaveDto.setEmail(userExpected.getEmail());
+
+        userSaveDtoJson = objectMapper.writeValueAsString(userSaveDto);
+        userDtoExpectedJson = objectMapper.writeValueAsString(userExpected);
+
+        userId = userExpected.getId();
     }
 
     @Test
     void testCreateUser() throws Exception {
-        Long userId = userExpected.getId();
-        UserDto userSaveDto = new UserDto();
-        userSaveDto.setName(userExpected.getName());
-        userSaveDto.setEmail(userExpected.getEmail());
-        String userSaveDtoJson = objectMapper.writeValueAsString(userSaveDto);
-
-        when(service.createUser(any(UserDto.class)))
-                .thenReturn(userExpected);
-        String userDtoExpectedJson = objectMapper.writeValueAsString(userExpected);
+        when(service.createUser(any(UserDto.class))).thenReturn(userExpected);
 
         mockMvc.perform(post("/users")
                         .header(HEADER_USER_ID, userId)
@@ -65,12 +72,9 @@ class UserControllerTest {
 
     @Test
     void testGetUserById() throws Exception {
-        Long userId = userExpected.getId();
-        String path = "/users" + "/" + userId;
+        String path = "/users/" + userId;
 
-        when(service.getUserById(eq(userId)))
-                .thenReturn(userExpected);
-        String userDtoExpectedJson = objectMapper.writeValueAsString(userExpected);
+        when(service.getUserById(eq(userId))).thenReturn(userExpected);
 
         mockMvc.perform(get(path)
                         .header(HEADER_USER_ID, userId)
@@ -83,14 +87,14 @@ class UserControllerTest {
 
     @Test
     void testUpdateUser() throws Exception {
-        Long userId = userExpected.getId();
-        UserDto userSaveDtoForUpdate = new UserDto();
         String nameUpdated = "user2";
-        userSaveDtoForUpdate.setName(nameUpdated);
         String emailUpdated = "user2@example.com";
+
+        UserDto userSaveDtoForUpdate = new UserDto();
+        userSaveDtoForUpdate.setName(nameUpdated);
         userSaveDtoForUpdate.setEmail(emailUpdated);
         String userSaveDtoForUpdateJson = objectMapper.writeValueAsString(userSaveDtoForUpdate);
-        String path = "/users" + "/" + userId;
+        String path = "/users/" + userId;
 
         when(service.updateUser(eq(userId), eq(userSaveDtoForUpdate)))
                 .thenAnswer(invocationOnMock -> {
@@ -98,6 +102,7 @@ class UserControllerTest {
                     userExpected.setEmail(emailUpdated);
                     return userExpected;
                 });
+
         mockMvc.perform(patch(path)
                         .header(HEADER_USER_ID, userId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,8 +116,8 @@ class UserControllerTest {
 
     @Test
     void testDeleteUser() throws Exception {
-        Long userId = userExpected.getId();
-        String path = "/users" + "/" + userId;
+        String path = "/users/" + userId;
+
         mockMvc.perform(delete(path)
                         .header(HEADER_USER_ID, userId)
                         .accept(MediaType.APPLICATION_JSON))

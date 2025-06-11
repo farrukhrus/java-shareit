@@ -17,12 +17,9 @@ import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserMapper;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -40,19 +37,23 @@ import static ru.practicum.shareit.util.Constants.HEADER_USER_ID;
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BookingControllerTest {
+
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private ItemMapper itemMapper;
-    private UserMapper userMapper;
 
     @MockBean
     private final BookingService service;
+
     private BookingDto bookingExpected;
+    private BookingCreateDto bookingSaveDto;
+    private List<BookingDto> expectedBookings;
+    private String bookingSaveDtoJson;
+    private String bookingExpectedJson;
     private Long userId;
     private Long bookingId;
 
     @BeforeEach
-    public void testInit() {
+    public void testInit() throws Exception {
         userId = 1L;
         bookingId = 1L;
 
@@ -71,26 +72,28 @@ class BookingControllerTest {
         booker.setEmail("booker@email.com");
 
         bookingExpected = new BookingDto();
-        bookingExpected.setId(1L);
+        bookingExpected.setId(bookingId);
         bookingExpected.setStart(start);
         bookingExpected.setEnd(end);
         bookingExpected.setStatus(BookingStatus.WAITING);
         bookingExpected.setItem(item);
         bookingExpected.setBooker(booker);
 
+        bookingSaveDto = new BookingCreateDto();
+        bookingSaveDto.setItemId(item.getId());
+        bookingSaveDto.setStart(start);
+        bookingSaveDto.setEnd(end);
+
+        expectedBookings = List.of(bookingExpected);
+        bookingSaveDtoJson = objectMapper.writeValueAsString(bookingSaveDto);
+        bookingExpectedJson = objectMapper.writeValueAsString(bookingExpected);
     }
 
     @Test
     void testCreateBooking() throws Exception {
-        BookingCreateDto bookingSaveDto = new BookingCreateDto();
-        bookingSaveDto.setItemId(1L);
-        bookingSaveDto.setStart(LocalDateTime.now());
-        bookingSaveDto.setEnd(LocalDateTime.now().plusMinutes(1));
-        String bookingSaveDtoJson = objectMapper.writeValueAsString(bookingSaveDto);
-        String bookingExpectedJson = objectMapper.writeValueAsString(bookingExpected);
-
         when(service.createBooking(eq(userId), any(BookingCreateDto.class)))
                 .thenReturn(bookingExpected);
+
         mockMvc.perform(post("/bookings")
                         .header(HEADER_USER_ID, String.valueOf(userId))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +110,7 @@ class BookingControllerTest {
         String path = "/bookings/" + bookingId;
 
         when(service.updateBookingStatus(eq(userId), eq(bookingId), eq(approved)))
-                .thenAnswer(invocationOnMock -> {
+                .thenAnswer(invocation -> {
                     bookingExpected.setStatus(BookingStatus.APPROVED);
                     return bookingExpected;
                 });
@@ -133,7 +136,7 @@ class BookingControllerTest {
                         .header(HEADER_USER_ID, String.valueOf(userId))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(bookingExpected)));
+                .andExpect(content().json(bookingExpectedJson));
 
         verify(service, times(1)).getBookingById(eq(userId), eq(bookingId));
     }
@@ -143,12 +146,11 @@ class BookingControllerTest {
         BookingState state = BookingState.REJECTED;
 
         when(service.getBookingsByState(eq(userId), eq(state)))
-                .thenReturn(Collections.emptyList());
+                .thenReturn(List.of());
 
         mockMvc.perform(get("/bookings")
                         .header(HEADER_USER_ID, String.valueOf(userId))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("state", String.valueOf(state))
+                        .param("state", state.name())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
@@ -159,19 +161,17 @@ class BookingControllerTest {
     @Test
     void testGetBookingsForOwner() throws Exception {
         BookingState state = BookingState.WAITING;
-        String path = "/bookings" + "/owner";
-        List<BookingDto> expectedBookings = List.of(bookingExpected);
-        String expectedBookingsJson = objectMapper.writeValueAsString(expectedBookings);
 
         when(service.getBookingsForOwner(eq(userId), eq(state)))
                 .thenReturn(expectedBookings);
-        mockMvc.perform(get(path)
-                        .header(HEADER_USER_ID, userId)
-                        .param("state", String.valueOf(state))
+
+        mockMvc.perform(get("/bookings/owner")
+                        .header(HEADER_USER_ID, String.valueOf(userId))
+                        .param("state", state.name())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()", is(1)))
-                .andExpect(content().json(expectedBookingsJson));
+                .andExpect(content().json(objectMapper.writeValueAsString(expectedBookings)));
 
         verify(service, times(1)).getBookingsForOwner(eq(userId), eq(state));
     }
